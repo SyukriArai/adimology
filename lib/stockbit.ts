@@ -114,7 +114,7 @@ export async function fetchWatchlist(): Promise<WatchlistResponse> {
   }
 
   const metaJson = await metaResponse.json();
-  
+
   const watchlists = Array.isArray(metaJson.data) ? metaJson.data : [metaJson.data];
   const defaultWatchlist = watchlists.find((w: any) => w.is_default) || watchlists[0];
   const watchlistId = defaultWatchlist?.watchlist_id;
@@ -150,15 +150,16 @@ export async function fetchWatchlist(): Promise<WatchlistResponse> {
 /**
  * Get top broker by BVAL from Market Detector response
  */
-export function getTopBroker(marketDetectorData: MarketDetectorResponse): BrokerData {
+export function getTopBroker(marketDetectorData: MarketDetectorResponse): BrokerData | null {
   // Debug log to see actual API response structure
   // console.log('Market Detector API Response:', JSON.stringify(marketDetectorData, null, 2));
 
-  // The actual data is wrapped in a 'data' property
+  // The actual data is wrapped in 'data' property
   const brokers = marketDetectorData?.data?.broker_summary?.brokers_buy;
 
   if (!brokers || !Array.isArray(brokers) || brokers.length === 0) {
-    throw new Error('No broker data found in data.broker_summary.brokers_buy');
+    // Return null instead of throwing error to allow caller to handle gracefully
+    return null;
   }
 
   // Sort by bval descending and get the first one
@@ -187,23 +188,20 @@ export function getBrokerSummary(marketDetectorData: MarketDetectorResponse): Br
   const detector = marketDetectorData?.data?.bandar_detector;
   const brokerSummary = marketDetectorData?.data?.broker_summary;
 
-  if (!detector) {
-    throw new Error('No bandar_detector data found in response');
-  }
-
+  // Provide safe defaults if data is missing
   return {
     detector: {
-      top1: detector.top1,
-      top3: detector.top3,
-      top5: detector.top5,
-      avg: detector.avg,
-      total_buyer: detector.total_buyer,
-      total_seller: detector.total_seller,
-      number_broker_buysell: detector.number_broker_buysell,
-      broker_accdist: detector.broker_accdist,
-      volume: detector.volume,
-      value: detector.value,
-      average: detector.average,
+      top1: detector?.top1 || { total_value: 0, percentage: 0, action: 'NEUTRAL' },
+      top3: detector?.top3 || { total_value: 0, percentage: 0, action: 'NEUTRAL' },
+      top5: detector?.top5 || { total_value: 0, percentage: 0, action: 'NEUTRAL' },
+      avg: detector?.avg || 0,
+      total_buyer: detector?.total_buyer || { volume: '0', value: '0', frequency: 0 },
+      total_seller: detector?.total_seller || { volume: '0', value: '0', frequency: 0 },
+      number_broker_buysell: detector?.number_broker_buysell || { buyer: 0, seller: 0 },
+      broker_accdist: detector?.broker_accdist || [],
+      volume: detector?.volume || { net_foreign: '0', net_local: '0', total: '0' },
+      value: detector?.value || { net_foreign: '0', net_local: '0', total: '0' },
+      average: detector?.average || { foreign: '0', local: '0', total: '0' },
     },
     topBuyers: brokerSummary?.brokers_buy?.slice(0, 4) || [],
     topSellers: brokerSummary?.brokers_sell?.slice(0, 4) || [],

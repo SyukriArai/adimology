@@ -15,9 +15,9 @@ interface CalculatorProps {
 // Helper function to format the result data for copying
 function formatResultForCopy(result: StockAnalysisResult): string {
   const { input, stockbitData, marketData, calculated } = result;
-  
+
   const formatNumber = (num: number | null | undefined) => num?.toLocaleString() ?? '-';
-  
+
   const calculateGain = (target: number) => {
     const gain = ((target - marketData.harga) / marketData.harga) * 100;
     return gain.toFixed(2);
@@ -61,17 +61,21 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
   const [copied, setCopied] = useState(false);
   const [copiedImage, setCopiedImage] = useState(false);
 
+  // Date state lifted from InputForm
+  const [fromDate, setFromDate] = useState(getDefaultDate());
+  const [toDate, setToDate] = useState(getDefaultDate());
+
   // Reset result and error when a new stock is selected from sidebar
   useEffect(() => {
     if (selectedStock) {
       setResult(null);
       setError(null);
-      // Auto-analyze with default dates
-      const defaultDate = getDefaultDate();
+      // Auto-analyze with current selected dates
+      // This allows clicking watchlist items to RESPECT the date range selected by user
       handleSubmit({
         emiten: selectedStock,
-        fromDate: defaultDate,
-        toDate: defaultDate
+        fromDate,
+        toDate
       });
     }
   }, [selectedStock]);
@@ -104,9 +108,14 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
     }
   };
 
+  const handleDateChange = (newFrom: string, newTo: string) => {
+    setFromDate(newFrom);
+    setToDate(newTo);
+  };
+
   const handleCopy = async () => {
     if (!result) return;
-    
+
     try {
       const formattedText = formatResultForCopy(result);
       await navigator.clipboard.writeText(formattedText);
@@ -154,7 +163,14 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
         </p>
       </div>
 
-      <InputForm onSubmit={handleSubmit} loading={loading} initialEmiten={selectedStock} />
+      <InputForm
+        onSubmit={handleSubmit}
+        loading={loading}
+        initialEmiten={selectedStock}
+        fromDate={fromDate}
+        toDate={toDate}
+        onDateChange={handleDateChange}
+      />
 
       {loading && (
         <div className="text-center mt-4">
@@ -164,7 +180,7 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
       )}
 
       {error && (
-        <div className="glass-card mt-4" style={{ 
+        <div className="glass-card mt-4" style={{
           background: 'rgba(245, 87, 108, 0.1)',
           borderColor: 'var(--accent-warning)'
         }}>
@@ -182,7 +198,7 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
               <div id="compact-result-card-container">
                 <CompactResultCard result={result} />
               </div>
-              
+
               {/* Copy Buttons */}
               <div style={{ display: 'flex', gap: '0.5rem' }}>
                 <button
@@ -247,10 +263,10 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
 
             {/* Right Column: Broker Summary */}
             {result.brokerSummary && (
-              <BrokerSummaryCard 
+              <BrokerSummaryCard
                 emiten={result.input.emiten}
                 dateRange={`${result.input.fromDate} — ${result.input.toDate}`}
-                brokerSummary={result.brokerSummary} 
+                brokerSummary={result.brokerSummary}
               />
             )}
           </div>

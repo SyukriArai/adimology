@@ -8,12 +8,20 @@ interface InputFormProps {
   onSubmit: (data: StockInput) => void;
   loading: boolean;
   initialEmiten?: string | null;
+  fromDate: string;
+  toDate: string;
+  onDateChange: (fromDate: string, toDate: string) => void;
 }
 
-export default function InputForm({ onSubmit, loading, initialEmiten }: InputFormProps) {
+export default function InputForm({
+  onSubmit,
+  loading,
+  initialEmiten,
+  fromDate,
+  toDate,
+  onDateChange
+}: InputFormProps) {
   const [emiten, setEmiten] = useState('SOCI');
-  const [fromDate, setFromDate] = useState(getDefaultDate());
-  const [toDate, setToDate] = useState(getDefaultDate());
 
   useEffect(() => {
     if (initialEmiten) {
@@ -29,7 +37,7 @@ export default function InputForm({ onSubmit, loading, initialEmiten }: InputFor
   const setDateRange = (days: number) => {
     const end = new Date();
     const start = new Date();
-    
+
     // If days is 0 (1D), it means just today for both
     if (days === 0) {
       // both are today, already default
@@ -37,12 +45,11 @@ export default function InputForm({ onSubmit, loading, initialEmiten }: InputFor
     } else {
       start.setDate(end.getDate() - days);
     }
-    
+
     // Format YYYY-MM-DD
     const formatDate = (d: Date) => d.toISOString().split('T')[0];
-    
-    setToDate(formatDate(end));
-    setFromDate(formatDate(start));
+
+    onDateChange(formatDate(start), formatDate(end));
   };
 
   return (
@@ -55,7 +62,7 @@ export default function InputForm({ onSubmit, loading, initialEmiten }: InputFor
           <button type="button" onClick={() => setDateRange(30)} className="quick-date-btn">1M</button>
         </div>
       </div>
-      
+
       <div className="compact-form-row">
         <div className="input-group compact-group" style={{ flex: '0 0 100px' }}>
           <label htmlFor="emiten" className="input-label compact-label">
@@ -82,7 +89,7 @@ export default function InputForm({ onSubmit, loading, initialEmiten }: InputFor
               type="date"
               className="input-field compact-input"
               value={fromDate}
-              onChange={(e) => setFromDate(e.target.value)}
+              onChange={(e) => onDateChange(e.target.value, toDate)}
               required
             />
             <span className="date-separator">→</span>
@@ -91,7 +98,7 @@ export default function InputForm({ onSubmit, loading, initialEmiten }: InputFor
               type="date"
               className="input-field compact-input"
               value={toDate}
-              onChange={(e) => setToDate(e.target.value)}
+              onChange={(e) => onDateChange(fromDate, e.target.value)}
               required
             />
           </div>

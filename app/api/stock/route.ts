@@ -26,6 +26,16 @@ export async function POST(request: NextRequest) {
     // Extract top broker data
     const brokerData = getTopBroker(marketDetectorData);
 
+    if (!brokerData) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: 'Data broker tidak tersedia untuk periode ini (Market belum buka atau saham tidak aktif)'
+        },
+        { status: 404 }
+      );
+    }
+
     // Extract broker summary for the new card
     const brokerSummary = getBrokerSummary(marketDetectorData);
 
@@ -34,18 +44,18 @@ export async function POST(request: NextRequest) {
     // based on previous code handling. We'll try to access .data first.
     // Casting to any to avoid strict type checks on the potential direct structure if types are strict
     const obData = orderbookData.data || (orderbookData as any);
-    
+
     if (!obData.total_bid_offer || obData.close === undefined) {
-      console.log('Orderbook API Response Structure:', JSON.stringify(orderbookData, null, 2));
+      // console.log('Orderbook API Response Structure:', JSON.stringify(orderbookData, null, 2));
       throw new Error('Invalid Orderbook API response structure');
     }
 
     // Mencari offer terbesar dan bid terkecil dari orderbook hari ini
     const offerPrices = (obData.offer || []).map((o: { price: string }) => Number(o.price));
     const bidPrices = (obData.bid || []).map((b: { price: string }) => Number(b.price));
-    
-    const offerTeratas = offerPrices.length > 0 
-      ? Math.max(...offerPrices) 
+
+    const offerTeratas = offerPrices.length > 0
+      ? Math.max(...offerPrices)
       : Number(obData.high || 0);
     const bidTerbawah = bidPrices.length > 0 ? Math.min(...bidPrices) : 0;
 
