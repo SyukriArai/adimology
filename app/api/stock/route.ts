@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { fetchMarketDetector, fetchOrderbook, getTopBroker, parseLot, getBrokerSummary } from '@/lib/stockbit';
 import { calculateTargets } from '@/lib/calculations';
-import { saveStockQuery } from '@/lib/supabase';
+import { saveStockQuery, getLatestStockQuery } from '@/lib/supabase';
 import type { StockInput, ApiResponse } from '@/lib/types';
 
 export async function POST(request: NextRequest) {
@@ -27,6 +27,42 @@ export async function POST(request: NextRequest) {
     const brokerData = getTopBroker(marketDetectorData);
 
     if (!brokerData) {
+      // Attempt to fetch latest historical data
+      const historyData = await getLatestStockQuery(emiten);
+      
+      if (historyData) {
+        return NextResponse.json({
+          success: true,
+          data: {
+            input: { emiten, fromDate: historyData.from_date, toDate: historyData.to_date },
+            stockbitData: {
+              bandar: historyData.bandar,
+              barangBandar: historyData.barang_bandar,
+              rataRataBandar: historyData.rata_rata_bandar
+            },
+            marketData: {
+               harga: historyData.harga,
+               offerTeratas: historyData.ara,
+               bidTerbawah: historyData.arb,
+               totalBid: historyData.total_bid,
+               totalOffer: historyData.total_offer,
+               fraksi: historyData.fraksi
+            },
+            calculated: {
+               totalPapan: historyData.total_papan,
+               rataRataBidOfer: historyData.rata_rata_bid_ofer,
+               a: historyData.a,
+               p: historyData.p,
+               targetRealistis1: historyData.target_realistis,
+               targetMax: historyData.target_max
+            },
+            brokerSummary: null,
+            isFromHistory: true,
+            historyDate: historyData.from_date
+          }
+        });
+      }
+
       return NextResponse.json(
         {
           success: false,

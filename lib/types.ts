@@ -113,6 +113,8 @@ export interface StockAnalysisResult {
   marketData: MarketData;
   calculated: CalculatedData;
   brokerSummary?: BrokerSummaryData;
+  isFromHistory?: boolean;
+  historyDate?: string;
 }
 
 export interface ApiResponse {

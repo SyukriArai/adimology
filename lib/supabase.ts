@@ -154,3 +154,20 @@ export async function getWatchlistAnalysisHistory(filters?: {
 
   return { data, count };
 }
+
+/**
+ * Get latest stock query for a specific emiten
+ */
+export async function getLatestStockQuery(emiten: string) {
+  const { data, error } = await supabase
+    .from('stock_queries')
+    .select('*')
+    .eq('emiten', emiten)
+    .eq('status', 'success')
+    .order('from_date', { ascending: false })
+    .limit(1)
+    .single();
+
+  if (error) return null;
+  return data;
+}

@@ -69,7 +69,13 @@ export default function WatchlistHistoryTable() {
     if (!dateStr) return '-';
     // Handle YYYY-MM-DD format
     const date = new Date(dateStr);
-    return date.toLocaleDateString('id-ID', { day: '2-digit', month: '2-digit', year: 'numeric' });
+    return date.toLocaleDateString('id-ID', { day: '2-digit', month: 'short' }).replace(' ', '-');
+  };
+
+  const calculateGain = (price: number | undefined, target: number | undefined) => {
+    if (!price || !target || price === 0) return null;
+    const gain = ((target - price) / price) * 100;
+    return `+${gain.toFixed(1)}%`;
   };
 
   return (
@@ -161,12 +167,14 @@ export default function WatchlistHistoryTable() {
             <table style={{ width: '100%', borderCollapse: 'collapse', minWidth: '800px' }}>
               <thead style={{ background: 'var(--bg-secondary)' }}>
                 <tr>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Date</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Emiten</th>
-                  <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Bandar</th>
+                  <th style={{ whiteSpace: 'nowrap', padding: '1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Date</th>
+                  <th style={{ whiteSpace: 'nowrap', padding: '1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Emiten</th>
                   <th style={{ padding: '1rem', textAlign: 'right', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Harga</th>
                   <th style={{ padding: '1rem', textAlign: 'right', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Target R1</th>
                   <th style={{ padding: '1rem', textAlign: 'right', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Target Max</th>
+                  <th style={{ padding: '1rem', textAlign: 'left', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Bandar</th>
+                  <th style={{ padding: '1rem', textAlign: 'right', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Vol Bandar</th>
+                  <th style={{ padding: '1rem', textAlign: 'right', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Avg Bandar</th>
                   <th style={{ padding: '1rem', textAlign: 'center', fontSize: '0.85rem', color: 'var(--text-secondary)', fontWeight: 600 }}>Status</th>
                 </tr>
               </thead>
@@ -181,15 +189,31 @@ export default function WatchlistHistoryTable() {
                   >
                     <td style={{ padding: '0.75rem 1rem' }}>{formatDate(record.from_date)}</td>
                     <td style={{ padding: '0.75rem 1rem', fontWeight: 600, color: 'var(--accent-primary)' }}>{record.emiten}</td>
-                    <td style={{ padding: '0.75rem 1rem' }}>{record.bandar || '-'}</td>
                     <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontSize: '0.95rem' }}>
                       {formatNumber(record.harga)}
                     </td>
-                    <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontSize: '0.95rem', color: 'var(--accent-success)' }}>
-                      {formatNumber(record.target_realistis)}
+                    <td style={{ padding: '0.5rem 1rem', textAlign: 'right', verticalAlign: 'middle' }}>
+                      <div style={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontSize: '0.95rem', color: 'var(--accent-success)' }}>
+                        {formatNumber(record.target_realistis)}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                        {calculateGain(record.harga, record.target_realistis)}
+                      </div>
                     </td>
-                    <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontSize: '0.95rem', color: 'var(--accent-warning)' }}>
-                      {formatNumber(record.target_max)}
+                    <td style={{ padding: '0.5rem 1rem', textAlign: 'right', verticalAlign: 'middle' }}>
+                      <div style={{ fontWeight: 600, fontVariantNumeric: 'tabular-nums', fontSize: '0.95rem', color: 'var(--accent-warning)' }}>
+                        {formatNumber(record.target_max)}
+                      </div>
+                      <div style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', marginTop: '2px' }}>
+                        {calculateGain(record.harga, record.target_max)}
+                      </div>
+                    </td>
+                    <td style={{ padding: '0.75rem 1rem' }}>{record.bandar || '-'}</td>
+                    <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontSize: '0.9rem' }}>
+                      {formatNumber(record.barang_bandar)}
+                    </td>
+                    <td style={{ padding: '0.75rem 1rem', textAlign: 'right', fontVariantNumeric: 'tabular-nums', fontSize: '0.9rem' }}>
+                      {formatNumber(record.rata_rata_bandar)}
                     </td>
                     <td style={{ padding: '0.75rem 1rem', textAlign: 'center' }}>
                       {record.status === 'success' ? (

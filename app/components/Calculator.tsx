@@ -174,7 +174,7 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
 
   return (
     <div className="container">
-      <div className="mb-4"></div>
+
 
       <InputForm
         onSubmit={handleSubmit}
@@ -204,6 +204,29 @@ export default function Calculator({ selectedStock }: CalculatorProps) {
 
       {result && (
         <div style={{ marginTop: '2rem' }}>
+          {result.isFromHistory && result.historyDate && (
+            <div style={{
+              marginBottom: '1.5rem',
+              padding: '1rem',
+              background: 'rgba(255, 193, 7, 0.1)',
+              border: '1px solid rgba(255, 193, 7, 0.3)',
+              borderRadius: '12px',
+              color: '#ffc107',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '0.75rem',
+              fontSize: '0.9rem'
+            }}>
+              <span style={{ fontSize: '1.2rem' }}>⚠️</span>
+              <div>
+                Data broker live tidak tersedia. Menampilkan data history terakhir dari tanggal 
+                <strong style={{ marginLeft: '4px', color: '#ffca2c' }}>
+                  {new Date(result.historyDate).toLocaleDateString('id-ID', { day: 'numeric', month: 'long', year: 'numeric' })}
+                </strong>
+              </div>
+            </div>
+          )}
+
           {/* Side-by-side Cards Container */}
           <div className="cards-row">
             {/* Left Column: Compact Result + Copy Button */}
