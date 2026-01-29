@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useMemo } from 'react';
 import type { WatchlistItem, WatchlistGroup } from '@/lib/types';
-import { CheckCircle2, XCircle, MinusCircle, Search, Filter } from 'lucide-react';
+import { CheckCircle2, XCircle, MinusCircle, Search, Filter, X } from 'lucide-react';
 
 interface WatchlistSidebarProps {
   onSelect?: (symbol: string) => void;
@@ -116,6 +116,33 @@ export default function WatchlistSidebar({ onSelect }: WatchlistSidebarProps) {
     window.addEventListener('emiten-flagged' as any, handleFlagUpdate);
     return () => window.removeEventListener('emiten-flagged' as any, handleFlagUpdate);
   }, []);
+
+  const handleDelete = async (e: React.MouseEvent, companyId: number, symbol: string) => {
+    e.stopPropagation(); // Prevent onSelect from firing
+    
+    if (!selectedGroupId) return;
+    
+    if (!confirm(`Are you sure you want to remove ${symbol} from watchlist?`)) return;
+
+    try {
+      // Optimistic update
+      setWatchlist(prev => prev.filter(item => item.id !== companyId));
+      
+      const res = await fetch(`/api/watchlist?watchlistId=${selectedGroupId}&companyId=${companyId}`, {
+        method: 'DELETE'
+      });
+      
+      const json = await res.json();
+      if (!json.success) {
+        throw new Error(json.error || 'Failed to delete item');
+      }
+    } catch (err) {
+      console.error('Error deleting item:', err);
+      // Revert optimistic update on error
+      setRefreshSeed(prev => prev + 1);
+      alert(err instanceof Error ? err.message : 'Failed to delete item');
+    }
+  };
 
   // Extract unique sectors for dropdown
   const availableSectors = useMemo(() => {
@@ -404,11 +431,36 @@ export default function WatchlistSidebar({ onSelect }: WatchlistSidebarProps) {
 
           return (
             <div
-              key={item.company_id || index}
-              className="watchlist-item"
+              key={item.id || item.company_id || index}
+              className="watchlist-item interactive-delete"
               onClick={() => onSelect?.(item.symbol || item.company_code)}
-              style={{ padding: '0.65rem 0.75rem' }}
+              style={{ padding: '0.65rem 0.75rem', position: 'relative' }}
             >
+              {/* Delete Button */}
+              <button
+                className="delete-btn"
+                onClick={(e) => handleDelete(e, item.id as any, item.symbol || item.company_code)}
+                style={{
+                  position: 'absolute',
+                  top: '0.2rem',
+                  right: '0.2rem',
+                  padding: '4px',
+                  borderRadius: '50%',
+                  background: 'rgba(245, 87, 108, 0.1)',
+                  color: 'var(--accent-warning)',
+                  border: '1px solid rgba(245, 87, 108, 0.2)',
+                  cursor: 'pointer',
+                  zIndex: 2,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  opacity: 0,
+                  transition: 'all 0.2s ease'
+                }}
+                title={`Remove ${item.symbol || item.company_code}`}
+              >
+                <X size={12} />
+              </button>
               <div style={{ display: 'flex', flexDirection: 'column' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
                   <div style={{ fontWeight: 600, fontSize: '0.9rem' }}>{item.symbol || item.company_code}</div>

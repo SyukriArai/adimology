@@ -1916,3 +1916,14 @@ h3 {
   font-size: 0.7rem;
   padding: 1rem;
 }
+
+/* Watchlist Delete Hover Effect */
+.interactive-delete:hover .delete-btn {
+  opacity: 1 !important;
+}
+
+.delete-btn:hover {
+  background: var(--accent-warning) !important;
+  color: white !important;
+  transform: scale(1.1);
+}

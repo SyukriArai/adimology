@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { fetchWatchlist, fetchEmitenInfo } from '@/lib/stockbit';
+import { fetchWatchlist, fetchEmitenInfo, deleteWatchlistItem } from '@/lib/stockbit';
 import { supabase } from '@/lib/supabase';
 import type { ApiResponse } from '@/lib/types';
 
@@ -46,6 +46,7 @@ export async function GET(request: NextRequest) {
           const emitenInfo = await fetchEmitenInfo(symbol);
           return {
             ...item,
+            id: item.id, // Explicitly preserve lowercase id from API
             sector: emitenInfo?.data?.sector || undefined,
             flag: flagMap.get(symbol) || null
           };
@@ -53,6 +54,7 @@ export async function GET(request: NextRequest) {
           const symbol = (item.symbol || item.company_code).toUpperCase();
           return {
             ...item,
+            id: item.id, // Explicitly preserve lowercase id from API
             flag: flagMap.get(symbol) || null
           }; // Return without sector if fetch fails, but keep flag
         }
@@ -75,6 +77,33 @@ export async function GET(request: NextRequest) {
 
   } catch (error) {
     console.error('Watchlist API Error:', error);
+    return NextResponse.json(
+      {
+        success: false,
+        error: error instanceof Error ? error.message : 'Unknown error occurred',
+      },
+      { status: 500 }
+    );
+  }
+}
+
+export async function DELETE(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const watchlistId = searchParams.get('watchlistId');
+  const companyId = searchParams.get('companyId');
+
+  if (!watchlistId || !companyId) {
+    return NextResponse.json(
+      { success: false, error: 'Missing watchlistId or companyId' },
+      { status: 400 }
+    );
+  }
+
+  try {
+    await deleteWatchlistItem(Number(watchlistId), Number(companyId));
+    return NextResponse.json({ success: true, message: 'Item deleted successfully' });
+  } catch (error) {
+    console.error('Delete Watchlist API Error:', error);
     return NextResponse.json(
       {
         success: false,

@@ -64,7 +64,11 @@ async function getHeaders(): Promise<HeadersInit> {
     'authorization': `Bearer ${await getAuthToken()}`,
     'origin': 'https://stockbit.com',
     'referer': 'https://stockbit.com/',
-    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/143.0.0.0 Safari/537.36',
+    'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/144.0.0.0 Safari/537.36',
+    'accept-language': 'en-GB,en-US;q=0.9,en;q=0.8,id;q=0.7',
+    'sec-ch-ua': '"Not(A:Brand";v="8", "Chromium";v="144", "Google Chrome";v="144"',
+    'sec-ch-ua-mobile': '?0',
+    'sec-ch-ua-platform': '"Windows"',
   };
 }
 
@@ -402,3 +406,16 @@ export async function fetchHistoricalSummary(
   return json.data?.result || [];
 }
 
+/**
+ * Delete item from watchlist
+ */
+export async function deleteWatchlistItem(watchlistId: number, companyId: number): Promise<void> {
+  const url = `${STOCKBIT_BASE_URL}/watchlist/${watchlistId}/company/${companyId}/item`;
+
+  const response = await fetch(url, {
+    method: 'DELETE',
+    headers: await getHeaders(),
+  });
+
+  await handleApiResponse(response, 'Delete Watchlist Item API');
+}

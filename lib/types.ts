@@ -125,6 +125,7 @@ export interface ApiResponse {
 }
 
 export interface WatchlistItem {
+  id: string | number;  // Stockbit internal ID for the watchlist item
   company_id: number;
   company_code: string; // Keeping for compatibility, might be mapped from symbol
   symbol: string;       // New field from API
